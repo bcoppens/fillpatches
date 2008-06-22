@@ -24,6 +24,7 @@
 #include <set>
 #include <list>
 #include <ctime>
+#include <cassert>
 #include <string.h> // debug
 #include "patch.h"
 #include "growthpairs.h"
@@ -381,6 +382,7 @@ int main(int argc, char** argv) {
     filebuf buffer;
     ProcessBorderStack::OutputType type;
     bool use_stdout = false;
+    bool use_stdin = false;
 
     if ((argc == 6) || (argc == 7)) { // Not interactive, newstyle
         minLength = atoi(argv[2]);
@@ -401,6 +403,29 @@ int main(int argc, char** argv) {
             else if (strcmp(argv[6], "growth") == 0)
                 type = ProcessBorderStack::GrowthPair;
             else if (strcmp(argv[6], "isopatches") == 0)
+                type = ProcessBorderStack::IsomerisationPatch;
+            else
+                return -1;
+        }
+    } else if ((argc == 5 || argc == 4) && strcmp(argv[2], "borderslist") == 0) {
+        use_stdin = true;
+        cerr << "STDIN\n";
+        // Copied from above (refactor?)
+        buffer.open(argv[1], ios::out);
+        if ((argc == 4) && (strcmp(argv[3], "time") == 0)) {
+            time_generation = true;
+            type = ProcessBorderStack::None;
+        } else if ((argc == 4) && (strcmp(argv[3], "outall") == 0)) {
+            time_generation = true;
+            type = ProcessBorderStack::OutputAll;
+        } else {
+            if (strcmp(argv[3], "pairs_out") != 0)
+                return -1;
+            if (strcmp(argv[4], "isomerisation") == 0)
+                type = ProcessBorderStack::IsomerisationPair;
+            else if (strcmp(argv[4], "growth") == 0)
+                type = ProcessBorderStack::GrowthPair;
+            else if (strcmp(argv[4], "isopatches") == 0)
                 type = ProcessBorderStack::IsomerisationPatch;
             else
                 return -1;
@@ -446,6 +471,8 @@ int main(int argc, char** argv) {
         }
     } else { // Display usage
         cout << "Usage: " << argv[0] << " outputfile minlength maxlength pentagons pairs_out [isomerisation|growth|isopatches]" << endl;
+        cout << "Usage: " << argv[0] << " outputfile borderslist pairs_out [isomerisation|growth|isopatches]" << endl;
+        cout << "Usage: " << argv[0] << " outputfile borderslist time" << endl;
         cout << "Usage: " << argv[0] << " outputfile minlength maxlength pentagons time" << endl;
         cout << "Usage: " << argv[0] << " [outputfile] k borders_01_k" << endl;
         cout << "Usage: " << argv[0] << " [outputfile] k borders_0_01_k" << endl;
@@ -466,41 +493,81 @@ int main(int argc, char** argv) {
     ostream& out = *out_;
     out << ">>planar_code le<<";
 
-    for (int length = minLength; length <= maxLength; length++) {
-        if ((length+pentagons) % 2 != 0) {
-            continue;
-        }
-        int twos = (length-pentagons)/2+3;
-        int threes = (length+pentagons)/2-3;
-        // For this length
-        set<CanonicalBorder> canonicalBordersSeen;
-        set<CanonicalForm> generatedPatches;
+    if (use_stdin) {
+        while (!cin.eof() && cin.good()) {
+            string border;
+            cin >> border;
 
-        generatedPatches.clear();
-        patch.borderLength = length;
-        char* string = new char[length+1];
-        string[length] = '\0';
-        cerr << "Next length: " << length << endl;
+            // For this length
+            set<CanonicalBorder> canonicalBordersSeen;
+            set<CanonicalForm> generatedPatches;
 
-        ProcessBorderStack pbs(out, canonicalBordersSeen, generatedPatches, length, pentagons, type);
+            generatedPatches.clear();
 
-        if (k != -1) { // (01)^k or 0(01)^k
-            for (int i = 0; i < k; i++) {
-                string[2*i] = '2';
-                string[2*i+1] = '3';
+            int length = border.length();
+
+            patch.borderLength = length;
+
+            int twos = 0;
+            int threes = 0;
+            int pentagons = 0;
+
+            for (int i = 0; i < length; i++) {
+                if (border[i] == '2')
+                    twos++;
+                if (border[i] == '3')
+                    threes++;
             }
-            if (length % 2 == 1) {
-                // 0(01)^k
-                string[2*k] = '2';
-            }
-            cerr << string << endl;
-            processBorder(string, pbs);
-        } else {
-            CreateStringsStack cstack(length);
-            createStrings(twos, threes, string, string, pbs, cstack);
-        }
 
-        delete[] string;
+            pentagons = 6 - twos + threes;
+
+            if (((length+pentagons) % 2 != 0) || length == 0) {
+                continue;
+            }
+
+            cerr << "Next length: " << length << " p = " << pentagons << endl;
+
+            ProcessBorderStack pbs(out, canonicalBordersSeen, generatedPatches, length, pentagons, type);
+
+            processBorder(border.c_str(), pbs);
+        }
+    } else {
+        for (int length = minLength; length <= maxLength; length++) {
+            if ((length+pentagons) % 2 != 0) {
+                continue;
+            }
+            int twos = (length-pentagons)/2+3;
+            int threes = (length+pentagons)/2-3;
+            // For this length
+            set<CanonicalBorder> canonicalBordersSeen;
+            set<CanonicalForm> generatedPatches;
+
+            generatedPatches.clear();
+            patch.borderLength = length;
+            char* string = new char[length+1];
+            string[length] = '\0';
+            cerr << "Next length: " << length << endl;
+
+            ProcessBorderStack pbs(out, canonicalBordersSeen, generatedPatches, length, pentagons, type);
+
+            if (k != -1) { // (01)^k or 0(01)^k
+                for (int i = 0; i < k; i++) {
+                    string[2*i] = '2';
+                    string[2*i+1] = '3';
+                }
+                if (length % 2 == 1) {
+                    // 0(01)^k
+                    string[2*k] = '2';
+                }
+                cerr << string << endl;
+                processBorder(string, pbs);
+            } else {
+                CreateStringsStack cstack(length);
+                createStrings(twos, threes, string, string, pbs, cstack);
+            }
+
+            delete[] string;
+        }
     }
 
     // Crossprocess code
