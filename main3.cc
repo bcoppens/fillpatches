@@ -378,7 +378,7 @@ FdAndMap dynamicFDStuff;
 
 int main(int argc, char** argv) {
     Patch patch;
-    int minLength, maxLength, pentagons, k = -1;
+    int minLength, maxLength = 4, pentagons, k = -1;
     filebuf buffer;
     ProcessBorderStack::OutputType type;
     bool use_stdout = false;
