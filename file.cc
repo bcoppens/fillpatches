@@ -164,9 +164,12 @@ FdAndMap loadCrossProcessFile(const char* file, FileOpenMode mode, int maxBorder
         fm.fd = open(file, O_RDWR);
         struct stat buf;
         int r = fstat(fm.fd, &buf);
-        if (r == -1)
+        if (r == -1) {
             perror("fstat");
-        assert(r == 0);
+            // File probably didn't exist, so fail gracefully by trying to create a new file
+            fm.fd = createCrossProcessFile(file, fm.size);
+            fm.map = (char*) mmap(0, fm.size, PROT_READ | PROT_WRITE, MAP_SHARED, fm.fd, 0);
+        }
 
         if (fm.size > buf.st_size) // warning: comparison between signed and unsigned integer expressions ???
             ftruncate(fm.fd, fm.size); // + 1?
