@@ -20,13 +20,14 @@
 #define GRAPH_H
 
 #include <vector>
+#include <limits>
 #include <list>
 #include <iostream>
 #include <utility>
 #include <map>
 
 typedef unsigned int Vertex;
-const Vertex OutVertex = UINT_MAX;
+const Vertex OutVertex = std::numeric_limits<Vertex>::digits;
 const Vertex InVertex = OutVertex - 1;
 const Vertex MinVertex = 0;
 const Vertex MaxVertex = InVertex - 1;

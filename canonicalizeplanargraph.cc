@@ -26,6 +26,8 @@
 #include <ctime>
 #include <cassert>
 
+#include <string.h>
+
 #include "patch.h"
 #include "file.h"
 #include "growthpairs.h"
