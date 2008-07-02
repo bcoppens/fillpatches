@@ -37,7 +37,7 @@ using namespace std;
 
 off_t bitOffsetForBorderCode(CanonicalBorder borderCode, int borderLength) {
     assert(borderCode);
-    assert(borderCode != -1);
+    assert(borderCode != CanonicalBorder(-1));
     //coutBitString(borderCode);
     //coutBitString(borderCode >> (borderLength - 2));
     assert((borderCode >> (borderLength - 2)) == 0);
@@ -47,12 +47,12 @@ off_t bitOffsetForBorderCode(CanonicalBorder borderCode, int borderLength) {
     //    coutBitString(borderCode);
     assert((borderCode & 1) == 1);
 
-    // This is in BIT positions! Could potentially overflow *haha* ;-)
-    off_t startOfThisRun = (long(1)<<(borderLength - long(1))) - long(3); // 2^{l+1} - 2 (starts with '00') - 1 (ends with '1')
-    off_t bitPosition = startOfThisRun + (borderCode >> long(1)); // ends with '1'
+    // This is in BIT positions! Could potentially overflow...! (###)
+    off_t startOfThisRun = (off_t(1)<<(borderLength - off_t(1))) - off_t(3); // 2^{l+1} - 2 (starts with '00') - 1 (ends with '1')
+    off_t bitPosition = startOfThisRun + (borderCode >> off_t(1)); // ends with '1'
 
     assert(bitPosition >= startOfThisRun);
-    assert(bitPosition < ((long(1)<<(borderLength)) - long(3)));
+    assert(bitPosition < ((off_t(1)<<(borderLength)) - off_t(3)));
 
     return bitPosition;
 }

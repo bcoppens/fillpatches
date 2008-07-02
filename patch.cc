@@ -585,7 +585,7 @@ vector<Patch> tryAddNGonToBorder(AddMode mode, Patch& patch, Vertex startPos, Ve
                 // Now try again to fill this up with a n-gon.
                 vector<Patch> l2 = tryAddNGonToBorder(InFilling, patch, startPos, direction, hexagonsMax, pentagonsMax);
 
-                for (int i = 0; i < l2.size(); i++) {
+                for (uint i = 0; i < l2.size(); i++) {
                     // ### !!! De andere zijde hoeft niet meer te worden opgevuld, omdat deze al door de vorige RECURSIEVE stap zal zijn ingevuld!
                     // Namelijk, van op het moment dat de recursieve stap een vijf- of zeshoek zal toegevoegd hebben, zal hij automatisch deze kant ook vullen!
                     resultPatches.push_back(l2.at(i));
@@ -683,7 +683,7 @@ vector<Patch> tryAddNGonToBorder(AddMode mode, Patch& patch, Vertex startPos, Ve
                     vector<Patch> l2 = tryAddNGonToBorder(BeforeFilling, patch, current, v, hexagonsMax, pentagonsMax);
                     // in case canHave == maybe for the second internal border, it will get filled in during the call here.
 #if 1       // ### WAAROM IS HIER EEN ELSE ???
-                    for (int j = 0; j < l2.size() && canHave != CanHaveNo; j++) {
+                    for (uint j = 0; j < l2.size() && canHave != CanHaveNo; j++) {
                         // We succeeded, try to fill the other side
                         vector<Patch> l3 = tryAddNGonToBorder(BeforeFilling, l2.at(j), v, current, hexagonsMax, pentagonsMax);
                         if (l3.size() > 0) {
@@ -694,7 +694,7 @@ vector<Patch> tryAddNGonToBorder(AddMode mode, Patch& patch, Vertex startPos, Ve
                             canHave = (l3.size() == 0) ? CanHaveNo : CanHaveYes;
                             addBorderCanHaveFilling(code, len, canHave);
                         }
-                        for (int k = 0; k < l3.size(); k++) {
+                        for (uint k = 0; k < l3.size(); k++) {
                             resultPatches.push_back(l3.at(k));
                         }
                     }
@@ -811,7 +811,7 @@ vector<Patch> addPentagonToBorderAndFill(Patch& patch, Vertex startPos, Vertex d
 
             vector<Patch> r = tryAddNGonToBorder(InFilling, patch, currentStart, to, -1, 6);
 
-            for (int i = 0; i < r.size(); i++)
+            for (uint i = 0; i < r.size(); i++)
                 result.push_back(r.at(i));
         }
 
@@ -907,7 +907,8 @@ CanonicalForm computeCanonicalForm(const Patch& patch, bool d, vector<PatchAutoI
         int direction = (*it).direction;
 #endif
 
-        assert(i < patch.borderLength);
+        assert(i >= 0);
+        assert(static_cast<unsigned int>(i) < patch.borderLength);
         for (int j = 0; j < 3; j++) {
             if (nb.nb[j] > MaxVertex)
                 continue;
@@ -921,7 +922,7 @@ CanonicalForm computeCanonicalForm(const Patch& patch, bool d, vector<PatchAutoI
                 // We will be 'moving' around the labels of the edges, store that permutation here
 
                 int firstFreeLabel = 0;
-                for (int k = 0; k < list.size(); k++) {
+                for (uint k = 0; k < list.size(); k++) {
                     mapped.at(k) = false;
                 }
 
@@ -932,7 +933,7 @@ CanonicalForm computeCanonicalForm(const Patch& patch, bool d, vector<PatchAutoI
                 firstFreeLabel++;
                 bool abort = false;
 
-                for (int l = 0; l < list.size() &&!abort; l++) {
+                for (uint l = 0; l < list.size() &&!abort; l++) {
                     Vertex v = rmapping.at(l);
                     Neighbours nb2 = list.at(v);
 
@@ -1001,7 +1002,7 @@ CanonicalForm computeCanonicalForm(const Patch& patch, bool d, vector<PatchAutoI
     if(autoMorphisms)
         autoMorphisms->clear();
     if (d || autoMorphisms) {
-        for (int i = 0; i < found.size(); i++) {
+        for (uint i = 0; i < found.size(); i++) {
             if (found.at(i).form == canonicalForm) {
                 if (d) {
                     automorphisms++;
@@ -1081,7 +1082,7 @@ void outputWriteGraph2D(const VertexVector& list, ostream& out, bool addInVertex
     // This assumes that the stream has been 'initialized' by having a
     // '>>writegraph2d<<\n' line as first line
     Vertex fakeInVertex = list.size() + 1;
-    for (int i = 0; i < list.size(); i++) {
+    for (uint i = 0; i < list.size(); i++) {
         if (!addOne)
             out << i << " ";
         else
@@ -1106,7 +1107,7 @@ void outputWriteGraph2D(const VertexVector& list, ostream& out, bool addInVertex
     }
     if (addedIn) {
         out << fakeInVertex << " 0 0 ";
-        for (int i = 0; i < toIn.size(); i++)
+        for (uint i = 0; i < toIn.size(); i++)
             if (addOne)
                 out << toIn.at(i) << " ";
             else
@@ -1129,8 +1130,8 @@ void outputPlanarCode(const VertexVector& list, std::ostream& out) {
     char c = (char) list.size();
     out << c;
     // Loop over all vertices, then iterating their neighbours (clockwise!)
-    for (int i = 0; i < list.size(); i++) {
-        for (int j = 0; j < 3; j++) {
+    for (uint i = 0; i < list.size(); i++) {
+        for (uint j = 0; j < 3; j++) {
             if (list.at(i).nb[j] <= MaxVertex) {
                 assert(list.at(i).nb[j] < 256); // Fits in a char!
 #ifdef OUTPUT_SHORTS // ### HACK
@@ -1265,7 +1266,7 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
     if ((edgesSeen < BorderFillingMinLen) || (edgesSeen > BorderFillingMaxLen))
         result.canBeQueried = false;
 
-    assert(result.length == offsetToVertex.size());
+    assert(static_cast<uint>(result.length) == offsetToVertex.size());
 
     result.startPos = offsetToVertex.at(0); // 0
     result.direction = offsetToVertex.at(1); // 1
@@ -1432,7 +1433,7 @@ void assertAnalyzedInformationOK(const BorderInformation& info, const VertexVect
         assert(info.borderCode == code.first);
         assert(code.second == info.length);
     } else {
-        assert(code.first == -1); // ### SUCKT
+        assert(code.first == static_cast<CanonicalBorder>(-1)); // ### SUCKT
         assert(code.second == 0);
     }
 }

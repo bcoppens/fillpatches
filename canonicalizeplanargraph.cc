@@ -141,14 +141,14 @@ Patch inputPlanarCode(std::istream& in) {
     Vertex nextFreeLabel = 0;
     VertexVector relabeled;
 
-    for (int i = 0; i < v.size(); i++) { // Init ### sneller opzoeken
-        relabeling.push_back(-1);
-        reverselabeling.push_back(-1);
+    for (uint i = 0; i < v.size(); i++) { // Init ### sneller opzoeken
+        relabeling.push_back(Vertex(-1));
+        reverselabeling.push_back(Vertex(-1));
         relabeled.push_back(Neighbours());
     }
 
     // Initialize the relabeling for the border, relabel the border
-    for (int i = 0; i < patch.borderLength; i++) {
+    for (uint i = 0; i < patch.borderLength; i++) {
         // The order of the border here is reverse of what it should be in the list!
         if(reverseOrder) {
             reverselabeling.at(nextFreeLabel) = borderVertices.at(patch.borderLength - i - 1);
@@ -161,13 +161,13 @@ Patch inputPlanarCode(std::istream& in) {
 
     list<Vertex> toRelabelQueue;
     // Relabel border
-    for (int i = 0; i < patch.borderLength; i++) {
+    for (uint i = 0; i < patch.borderLength; i++) {
         Vertex relabelThis = borderVertices.at(i);
         Vertex newLabel = relabeling.at(relabelThis);
         Neighbours nb = v.at(relabelThis);
-        for (int j = 0; j < 3; j++) {
+        for (uint j = 0; j < 3; j++) {
             if (nb.nb[j] <= MaxVertex) {
-                if (relabeling.at(nb.nb[j]) != -1) {
+                if (relabeling.at(nb.nb[j]) != Vertex(-1)) {
                     nb.nb[j] = relabeling.at(nb.nb[j]);
                 } else {
                     Vertex origLabel = nb.nb[j];
@@ -194,9 +194,9 @@ Patch inputPlanarCode(std::istream& in) {
         toRelabelQueue.pop_front();
         Neighbours nb = v.at(relabelThis);
 
-        for (int j = 0; j < 3; j++) {
+        for (uint j = 0; j < 3; j++) {
             if (nb.nb[j] <= MaxVertex) {
-                if (relabeling.at(nb.nb[j]) != -1) {
+                if (relabeling.at(nb.nb[j]) != Vertex(-1)) {
                     nb.nb[j] = relabeling.at(nb.nb[j]);
                 } else {
                     Vertex origLabel = nb.nb[j];
@@ -291,7 +291,7 @@ int main(int argc, char** argv) {
         pair<CanonicalBorder, int> code1 = codeForBorder(patch1.list, 0, 1, patch1.borderLength/* onActualBorderLength */, &borderAutomorphisms1);
         pair<CanonicalBorder, int> code2 = codeForBorder(patch2.list, 0, 1, patch2.borderLength/* onActualBorderLength */, &borderAutomorphisms2);
         assert(code1.first == code2.first);
-        assert(code1.first != -1); // ###
+        assert(code1.first != CanonicalBorder(-1)); // ###
 
 #if 1
         // Gunnar's code also outputs unembeddable ones, filter them away!

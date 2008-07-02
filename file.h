@@ -37,7 +37,7 @@ struct FdAndMap {
     int fd;
     char* map;
     char* preloaded;
-    size_t size;
+    off_t size; // ### for fstat...
     size_t preloadsize;
 };
 typedef enum { Create, Read, ReUse } FileOpenMode; // ReUse assumes file exists

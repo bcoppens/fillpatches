@@ -43,7 +43,7 @@ struct Patch {
     VertexVector list;
     int hexagons;
     int pentagons;
-    int borderLength;
+    unsigned int borderLength;
 };
 
 // length is the number of vertices
@@ -113,7 +113,7 @@ inline void get_next_real_neighbour(Vertex prev, Vertex current, Vertex& next,
         if (current > MaxVertex) { cout << "CURRENT>MAX!!!" << endl; break; }\
         nb = list.at(current); \
         \
-        int nextIndex = indexOfNextVertex(prev, nb); \
+        unsigned int nextIndex = indexOfNextVertex(prev, nb); \
         next = nb.nb[nextIndex];
 
 // XXX Maak die if optioneel???

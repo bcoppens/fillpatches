@@ -85,7 +85,7 @@ bool isBorderIsomorphism(const Patch& p1, const Patch& p2, Vertex p1Start, Verte
     Neighbours nb1, nb2;
 
     // We abuse the fact here that the vertices of the border are the first vertices of a patch
-    for (int i = 0; i < p1.borderLength; i++) {
+    for (unsigned int i = 0; i < p1.borderLength; i++) {
         bool hasOutEdge1 = false;
         bool hasOutEdge2 = false;
         Vertex v2;
@@ -128,7 +128,7 @@ bool isIrreducibleGrowthPair(const Patch& p1, const Patch& p2) {
     // We choose one ordered edge in p1, and then
     // try mapping it to any possible ordered edge so that we get an
     // isomorphism of the border.
-    for (int i = 0; i < p2.borderLength; i++) {
+    for (unsigned int i = 0; i < p2.borderLength; i++) {
         nb = p2.list.at(i);
         for (int j = 0; j <= 1; j++) {
             // We have a border edge, see if it is indeed isomorph
@@ -143,11 +143,11 @@ bool isIrreducibleGrowthPair(const Patch& p1, const Patch& p2) {
             // the pair is reducible.
 
             // The border in the patch is 0->1->2->...->0, use that
-            for (int k = 0; k < p1.borderLength; k++)
+            for (unsigned int k = 0; k < p1.borderLength; k++)
                 visited.at(k) = false;
 
             bool allRemovableFacesMappedToDifferents = true;
-            for (int k = 0; k < p1.borderLength; k++) {
+            for (unsigned int k = 0; k < p1.borderLength; k++) {
                 //if (visited.at(k))
                 //    continue;
                 // We get the edge k -> k+1 (mod length):
@@ -199,7 +199,9 @@ bool isIrreducibleGrowthPair(const Patch& p1, const Patch& p2) {
 
 bool borderEncodingIsEmbeddableInFullerene(CanonicalBorder b, int length) {
     // Will block '(33333) (Will not detect HIDDEN stuff, or somesuch!)
-    static const int mask = (1) | (1<<1) | (1<<2) | (1<<3) | (1<<4);
+    static const unsigned int mask = (1) | (1<<1) | (1<<2) | (1<<3) | (1<<4);
+    if (length < 5)
+        return true; // 'Safe' assumption
     for (int i = 0; i <= length - 5; i++) {
         if ((b & (mask << i)) == (mask << i))
             return false;

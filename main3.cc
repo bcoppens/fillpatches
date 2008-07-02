@@ -281,7 +281,7 @@ void processBorder(const char* string, ProcessBorderStack& stack)
     } else if(stack.outputType == ProcessBorderStack::OutputAll) {
         vector<Patch> outputtable;
 
-        for (int i = 0; i < l.size(); i++) {
+        for (uint i = 0; i < l.size(); i++) {
             // Isomorfism rejection
             CanonicalForm f = computeCanonicalForm(l.at(i));
             if (stack.generatedPatches.find(f) == stack.generatedPatches.end()) {
@@ -290,7 +290,7 @@ void processBorder(const char* string, ProcessBorderStack& stack)
             }
         }
 
-        for (int i = 0; i < outputtable.size(); i++) {
+        for (uint i = 0; i < outputtable.size(); i++) {
             outputPlanarCode(outputtable.at(i).list, stack.out);
         }
         cerr << "Non-Isomorphic: " << outputtable.size() << endl;
@@ -298,7 +298,7 @@ void processBorder(const char* string, ProcessBorderStack& stack)
         // Isomerisation patches
         if (borderAutomorphisms.size() > 1) {
             // At least 2 automorphisms, check each patch that has _less_ automorphisms
-            for (int i = 0; i < l.size(); i++) {
+            for (uint i = 0; i < l.size(); i++) {
                 vector<PatchAutoInfo> patchAutomorphisms;
                 // ### Hier moeten we gebruik maken van het feit dat we reeds de automorfismen van de rand hebben!
                 CanonicalForm f = computeCanonicalForm(l.at(i), false /*debug*/, &patchAutomorphisms);
@@ -322,7 +322,7 @@ void processBorder(const char* string, ProcessBorderStack& stack)
         // Isomerisation pairs (mutually excludes isomerization code pathway)
         vector<Patch> outputtable;
 
-        for (int i = 0; i < l.size(); i++) {
+        for (uint i = 0; i < l.size(); i++) {
             // Isomorfism rejection
             CanonicalForm f = computeCanonicalForm(l.at(i));
             if (stack.generatedPatches.find(f) == stack.generatedPatches.end()) {
@@ -331,8 +331,8 @@ void processBorder(const char* string, ProcessBorderStack& stack)
             }
         }
         if (outputtable.size() > 1) {
-            for (int i = 0; i < outputtable.size(); i++) {
-                for (int j = i + 1; j < outputtable.size(); j++) { // j = i + 1, so that we don't get doubles (and don't test ourselves)
+            for (uint i = 0; i < outputtable.size(); i++) {
+                for (uint j = i + 1; j < outputtable.size(); j++) { // j = i + 1, so that we don't get doubles (and don't test ourselves)
                     if (stack.outputType == ProcessBorderStack::GrowthPair) {
                         if (outputtable.at(i).list.size() == outputtable.at(j).list.size()) // Not a growth pair
                         continue;
@@ -378,7 +378,7 @@ FdAndMap dynamicFDStuff;
 
 int main(int argc, char** argv) {
     Patch patch;
-    int minLength, maxLength = 4, pentagons, k = -1;
+    int minLength = 0, maxLength = 4, pentagons = 0, k = -1;
     filebuf buffer;
     ProcessBorderStack::OutputType type;
     bool use_stdout = false;
