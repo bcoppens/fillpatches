@@ -134,11 +134,14 @@ ostream& operator<<(ostream& os, const VertexVector& vector) {
         Neighbours v = vector.at(i);
          os << '[';
          for (int j = 0; j < 3; j++) {
-             switch (v.nb[j]) {
+/*             switch (v.nb[j]) {
                  case InVertex: os << "In"; break;
                  case OutVertex: os << "Out"; break;
                  default: os << v.nb[j];
-             }
+             }*/
+             if (v.nb[j] == InVertex) os << "In";
+             else if (v.nb[j] == OutVertex) os << "Out";
+             else os << v.nb[j];
              os << ((j < 2) ? ',' : ']');
         }
     }
@@ -1126,7 +1129,7 @@ void outputWriteGraph2D(const VertexVector& list, ostream& out, bool addInVertex
 void outputPlanarCode(const VertexVector& list, std::ostream& out) {
     // Assumes the stream was initialized by >>planar_code le<<
     // Output the number of vertices:
-    cout << "PlanarCode: " << list.size() << endl;
+    //cout << "PlanarCode: " << list.size() << endl;
     char c = (char) list.size();
     out << c;
     // Loop over all vertices, then iterating their neighbours (clockwise!)

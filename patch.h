@@ -27,7 +27,7 @@
 #include <map>
 
 typedef unsigned int Vertex;
-const Vertex OutVertex = std::numeric_limits<Vertex>::digits;
+const Vertex OutVertex = std::numeric_limits<Vertex>::max();
 const Vertex InVertex = OutVertex - 1;
 const Vertex MinVertex = 0;
 const Vertex MaxVertex = InVertex - 1;
