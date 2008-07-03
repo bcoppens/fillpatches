@@ -9,8 +9,8 @@ MINPENTAGONS=2
 MAXPENTAGONS=4
 
 #MODE="ISO_PAIRS"
-#MODE="GROWTH_PAIRS"
-MODE="ISO_PATCHES"
+MODE="GROWTH_PAIRS"
+#MODE="ISO_PATCHES"
 
 BOUNDARY_DIR=`pwd`/boundary/
 OUTPUT_DIR=`pwd`/out/
@@ -31,7 +31,7 @@ do
     then
       BASE_MAIN3_FILENAME="${OUTPUT_DIR}/easycompare_${LENGTH}_${PENTAGONS}_main3_isopairs"
       BASE_BD_FILENAME="${BOUNDARY_DIR}/bd${LENGTH}_pent${PENTAGONS}_isomerisation_pairs.pl"
-      ./main3 $BASE_MAIN3_FILENAME ${LENGTH} ${LENGTH} ${PENTAGONS} pairs_out isomerisation &> /dev/null
+      ./main3 -borders generatelist -outputmethod pairs_out -pairs iso -o $BASE_MAIN3_FILENAME -minlength ${LENGTH} -maxlengthh ${LENGTH} -pentagons ${PENTAGONS} -filterunembeddable &> /dev/null
       cd ${BOUNDARY_DIR}
       ${BOUNDARY_EXECUTABLE} ${LENGTH} ${PENTAGONS} pairs_out isomerisation &> /dev/null
       cd ${CURDIR}
@@ -39,14 +39,14 @@ do
     then
       BASE_MAIN3_FILENAME="${OUTPUT_DIR}/easycompare_${LENGTH}_${PENTAGONS}_main3_isopatches"
       BASE_BD_FILENAME="${BOUNDARY_DIR}/bd${LENGTH}_pent${PENTAGONS}_diff_gluings_of_same_patch.pl"
-      ./main3 $BASE_MAIN3_FILENAME ${LENGTH} ${LENGTH} ${PENTAGONS} pairs_out isopatches &> /dev/null
+      ./main3 -borders generatelist -outputmethod isopatches -o $BASE_MAIN3_FILENAME -minlength ${LENGTH} -maxlength ${LENGTH} -pentagons ${PENTAGONS} -filterunembeddable &> /dev/null
       cd ${BOUNDARY_DIR}
       ${BOUNDARY_EXECUTABLE} ${LENGTH} ${PENTAGONS} pairs_out isomerisation &> /dev/null
       cd ${CURDIR}
     else
       BASE_MAIN3_FILENAME="${OUTPUT_DIR}/easycompare_${LENGTH}_${PENTAGONS}_main3_growthpairs"
       BASE_BD_FILENAME="${BOUNDARY_DIR}/bd${LENGTH}_pent${PENTAGONS}_growth_pairs.pl"
-      ./main3 $BASE_MAIN3_FILENAME ${LENGTH} ${LENGTH} ${PENTAGONS} pairs_out growth &> /dev/null
+      ./main3 -borders generatelist -outputmethod pairs_out -pairs growth -o $BASE_MAIN3_FILENAME -minlength ${LENGTH} -maxlength ${LENGTH} -pentagons ${PENTAGONS} -filterunembeddable &> /dev/null
       cd ${BOUNDARY_DIR}
       ${BOUNDARY_EXECUTABLE} ${LENGTH} ${PENTAGONS} pairs_out growth &> /dev/null
       cd ${CURDIR}

@@ -38,6 +38,7 @@ ostream* debugStream = 0;
 ostream* finishedStream = 0;
 
 bool time_generation = false;
+bool filter_unembeddable = false;
 unsigned long long patches_generated = 0;
 unsigned long long time_taken = 0;
 
@@ -256,7 +257,7 @@ void processBorder(const char* string, ProcessBorderStack& stack)
         stack.canonicalBordersSeen.insert(info.borderCode);
 
         // Remove unembeddable in fullerene
-        if (!borderEncodingIsEmbeddableInFullerene(info.borderCode, info.length))
+        if (filter_unembeddable && (!borderEncodingIsEmbeddableInFullerene(info.borderCode, info.length)))
             return;
     }
 
@@ -376,107 +377,165 @@ void processBorder(const char* string, ProcessBorderStack& stack)
 // Crossprocess code
 FdAndMap dynamicFDStuff;
 
+void usage(const string& progname) {
+    cout << "Usage:" << endl;
+    cout << progname << " -borders <bordermode> -outputmethod <outputmode> [opts]" << endl;
+    cout << " -borders <bordermode> selects the way the program will find the borders to fill." << endl;
+    cout << "   <bordermode> is one of:" << endl;
+    cout << "      generatelist: generates its own list of potentially non-isomorphic borders" << endl;
+    cout << "                    that satisfy the criteria from the REQUIRED parameters -pentagons, -minlength, -maxlength" << endl;
+    cout << "      borders_01_k: fills a border of the form (01)^k, where k is set by '-k <k>'" << endl;
+    cout << "      borders_0_01_k: fills a border of the form 0(01)^k, where k is set by '-k <k>'" << endl;
+    cout << "      stdin: reads the list of borders from standard input"<< endl;
+    cout << "      param: reads a single border to fill from the REQUIRED parameter -border" << endl;
+    cout << " -outputmethod <outputmode> sets what will be written to file:" << endl;
+    cout << "    <outputmode> is one of:" << endl;
+    cout << "      pairs_out: will output each isomerisation/growth pair found as 2 subsequent patches." << endl;
+    cout << "                 This REQUIRES you to set a pair selection method with -pairs <pairmethod>" << endl;
+    cout << "      isopatches: will output all isomerisation patches" << endl;
+    cout << "      patches_out: just output all patches found" << endl;
+    cout << "      none: fill all borders, but don't do anything with the result (handy in combination with -time)" << endl;
+    cout << " -pairs <pairmethod> is to chose which kind of pairs will be outputted," << endl;
+    cout << "    <pairmethod> is one of:" << endl;
+    cout << "      growth: output the growth patches (NOTICE: outputs information on standard output)" << endl;
+    cout << "      iso: output the isomerisation patches (NOTICE: outputs information on standard output)" << endl;
+    cout << " -time: when filling all borders, keep time information about that, and output this at program exit on stderr" << endl;
+    cout << " -border <bordercode> sets the border to be filled with -borders param. Should consist of 2s and 3s" << endl;
+    cout << " -k <k> sets the parameter 'k' for borders like 0(01)^k and (01)^k" << endl;
+    cout << " -o <filename> sets an outputfile for the filled patches (is standard output if not specified)" << endl;
+    cout << " -pentagons <p> sets the number of pentagons that all the generated borders should have" << endl;
+    cout << " -minlength <l> sets the minimum length of the generated borders" << endl;
+    cout << " -maxlength <l> sets the maximum length of the generated borders (inclusive)" << endl;
+    cout << " -filterunembeddable filters away patches/borders that are 'obviously' not embeddable in a fullerene" << endl;
+}
+
 int main(int argc, char** argv) {
     Patch patch;
     int minLength = 0, maxLength = 4, pentagons = 0, k = -1;
     filebuf buffer;
-    ProcessBorderStack::OutputType type;
-    bool use_stdout = false;
+    ProcessBorderStack::OutputType type = ProcessBorderStack::None;
+    bool use_stdout = true; // By default use standard output, unless -o is specified
     bool use_stdin = false;
+    enum { K_0_01, K_01, K_None } k_mode = K_None;
+    string paramborder("");
+    bool minSet = false, maxSet = false, pSet = false;
+    bool sawBorders = false, sawOutput = false;
 
-    if ((argc == 6) || (argc == 7)) { // Not interactive, newstyle
-        minLength = atoi(argv[2]);
-        maxLength = atoi(argv[3]);
-        pentagons = atoi(argv[4]);
-        buffer.open(argv[1], ios::out);
-        if ((argc == 6) && (strcmp(argv[5], "time") == 0)) {
-            time_generation = true;
-            type = ProcessBorderStack::None;
-        } else if ((argc == 6) && (strcmp(argv[5], "outall") == 0)) {
-            time_generation = true;
-            type = ProcessBorderStack::OutputAll;
-        } else {
-            if (strcmp(argv[5], "pairs_out") != 0)
+    string progname(argv[0]);
+    argv++; // skip argv[0]
+    for ( ; argc > 0 && *argv; --argc, ++argv) {
+        string opt(*argv);
+        if (opt == "-borders") {
+            // Read bordermode:
+            sawBorders = true;
+            ++argv; --argc;
+            string mode(*argv);
+            if (mode == "generatelist") {
+                ;
+            } else if (mode == "borders_0_01_k") {
+                k_mode = K_0_01;
+            } else if (mode == "borders_01_k") {
+                k_mode = K_01;
+            } else if (mode == "stdin") {
+                use_stdin = true;
+            } else if (mode == "param") {
+                // Is set by using -border...
+            } else {
+                usage(progname);
                 return -1;
-            if (strcmp(argv[6], "isomerisation") == 0)
-                type = ProcessBorderStack::IsomerisationPair;
-            else if (strcmp(argv[6], "growth") == 0)
-                type = ProcessBorderStack::GrowthPair;
-            else if (strcmp(argv[6], "isopatches") == 0)
+            }
+        } else if (opt == "-outputmethod") {
+            // Read outputmode:
+            sawOutput = true;
+            ++argv; --argc;
+            string mode(*argv);
+            if (mode == "pairs_out") {
+                // Mode will be selected in -pairs...
+            } else if (mode == "patches_out") {
+                type = ProcessBorderStack::OutputAll;
+            } else if (mode == "isopatches") {
                 type = ProcessBorderStack::IsomerisationPatch;
-            else
+            } else if (mode == "none") {
+                type = ProcessBorderStack::None;
+            } else {
+                usage(progname);
                 return -1;
-        }
-    } else if ((argc == 5 || argc == 4) && strcmp(argv[2], "borderslist") == 0) {
-        use_stdin = true;
-        cerr << "STDIN\n";
-        // Copied from above (refactor?)
-        buffer.open(argv[1], ios::out);
-        if ((argc == 4) && (strcmp(argv[3], "time") == 0)) {
-            time_generation = true;
-            type = ProcessBorderStack::None;
-        } else if ((argc == 4) && (strcmp(argv[3], "outall") == 0)) {
-            time_generation = true;
-            type = ProcessBorderStack::OutputAll;
-        } else {
-            if (strcmp(argv[3], "pairs_out") != 0)
-                return -1;
-            if (strcmp(argv[4], "isomerisation") == 0)
-                type = ProcessBorderStack::IsomerisationPair;
-            else if (strcmp(argv[4], "growth") == 0)
+            }
+        } else if (opt == "-pairs") {
+            // Read pairmethod:
+            ++argv; --argc;
+            string mode(*argv);
+            if (mode == "growth") {
                 type = ProcessBorderStack::GrowthPair;
-            else if (strcmp(argv[4], "isopatches") == 0)
-                type = ProcessBorderStack::IsomerisationPatch;
-            else
+            } else if (mode == "iso") {
+                type = ProcessBorderStack::IsomerisationPair;
+            } else {
+                usage(progname);
                 return -1;
-        }
-    } else if (argc == 4) {
-        if (strcmp(argv[3], "borders_01_k") == 0) {
-            // Borders (01)^k
-            k = atoi(argv[2]);
-            minLength = maxLength = 2*k;
-            pentagons = 6;
+            }
+        } else if (opt == "-time") {
             time_generation = true;
-            type = ProcessBorderStack::OutputAll;
-            buffer.open(argv[1], ios::out);
-        } else if (strcmp(argv[3], "borders_0_01_k") == 0) {
-            // Borders 0(01)^k
-            k = atoi(argv[2]);
-            minLength = maxLength = 2*k+1;
-            pentagons = 5;
-            time_generation = true;
-            type = ProcessBorderStack::OutputAll;
-            buffer.open(argv[1], ios::out);
+        } else if (opt == "-border") {
+            ++argv; --argc;
+            paramborder = *argv;
+            if (paramborder == "") {
+                cout << "Expected a border!" << endl;
+                usage(progname);
+                return -1;
+            }
+            uint len = paramborder.length();
+            for (int i = 0; i < len; i++) {
+                if (paramborder[i] != '2' && paramborder[i] != '3') {
+                    cout << "Expected a string of 2s and 3s as border!" << endl;
+                    usage(progname);
+                    return -1;
+                }
+            }
+        } else if (opt == "-k") {
+            ++argv; --argc;
+            if (k_mode == K_01) {
+                // Borders (01)^k
+                k = atoi(*argv);
+                minLength = maxLength = 2*k;
+                pentagons = 6;
+            } else if (k_mode == K_0_01) {
+                // Borders 0(01)^k
+                k = atoi(argv[2]);
+                minLength = maxLength = 2*k+1;
+                pentagons = 5;
+            } else {
+                cout << "-k needs to have -borders set (first) to borders_0_01_k or borders_01_k" << endl;
+                usage(progname);
+                return -1;
+            }
+        } else if (opt == "-o") {
+            // Read filename
+            ++argv; --argc;
+            buffer.open(*argv, ios::out);
+            use_stdout = false;
+        } else if (opt == "-pentagons") {
+            ++argv; --argc;
+            pentagons = atoi(*argv);
+            pSet = true;
+        } else if (opt == "-minlength") {
+            ++argv; --argc;
+            minLength = atoi(*argv);
+            minSet = true;
+        } else if (opt == "-maxlength") {
+            ++argv; --argc;
+            maxLength = atoi(*argv);
+            maxSet = true;
+        } else if (opt == "-filterunembeddable") {
+            filter_unembeddable = true;
         } else {
+            usage(progname);
             return -1;
         }
-    } else if (argc == 3) {
-        use_stdout = true;
-        if (strcmp(argv[2], "borders_01_k") == 0) {
-            // Borders (01)^k
-            k = atoi(argv[1]);
-            minLength = maxLength = 2*k;
-            pentagons = 6;
-            time_generation = true;
-            type = ProcessBorderStack::OutputAll;
-        } else if (strcmp(argv[2], "borders_0_01_k") == 0) {
-            // Borders 0(01)^k
-            k = atoi(argv[1]);
-            minLength = maxLength = 2*k+1;
-            pentagons = 5;
-            time_generation = true;
-            type = ProcessBorderStack::OutputAll;
-        } else {
-            return -1;
-        }
-    } else { // Display usage
-        cout << "Usage: " << argv[0] << " outputfile minlength maxlength pentagons pairs_out [isomerisation|growth|isopatches]" << endl;
-        cout << "Usage: " << argv[0] << " outputfile borderslist pairs_out [isomerisation|growth|isopatches]" << endl;
-        cout << "Usage: " << argv[0] << " outputfile borderslist time" << endl;
-        cout << "Usage: " << argv[0] << " outputfile minlength maxlength pentagons time" << endl;
-        cout << "Usage: " << argv[0] << " [outputfile] k borders_01_k" << endl;
-        cout << "Usage: " << argv[0] << " [outputfile] k borders_0_01_k" << endl;
-        return 0;
+    }
+
+    if (!sawBorders || !sawOutput) {
+        usage(progname);
+        return -1;
     }
 
     // Crossprocess code
@@ -493,10 +552,13 @@ int main(int argc, char** argv) {
     ostream& out = *out_;
     out << ">>planar_code le<<";
 
-    if (use_stdin) {
-        while (!cin.eof() && cin.good()) {
+    if (use_stdin || paramborder != "") {
+        while ((!cin.eof() && cin.good())  || paramborder != "") {
             string border;
-            cin >> border;
+            if (paramborder != "")
+                border = paramborder;
+            else
+                cin >> border;
 
             // For this length
             set<CanonicalBorder> canonicalBordersSeen;
@@ -530,8 +592,16 @@ int main(int argc, char** argv) {
             ProcessBorderStack pbs(out, canonicalBordersSeen, generatedPatches, length, pentagons, type);
 
             processBorder(border.c_str(), pbs);
+
+            if (paramborder != "")
+                break;
         }
     } else {
+        if (!pSet || !minSet || !maxSet) {
+            cout << "Need to have pentagons, minLength and maxLength set!" << endl;
+            usage(progname);
+            return -1;
+        }
         for (int length = minLength; length <= maxLength; length++) {
             if ((length+pentagons) % 2 != 0) {
                 continue;
