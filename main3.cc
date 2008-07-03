@@ -261,6 +261,11 @@ void processBorder(const char* string, ProcessBorderStack& stack)
             return;
     }
 
+    if (patch.borderLength > 8*sizeof(CanonicalBorder)) {
+        cerr << "Warning: Border length of the border is greater than allowed by the border code!" << endl;
+        cerr << " (" << patch.borderLength << " > " << (8*sizeof(CanonicalBorder)) << endl;
+    }
+
     patch.list = v;
     clock_t start = clock();
 
