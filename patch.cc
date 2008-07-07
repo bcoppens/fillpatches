@@ -1287,7 +1287,7 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
 
     // Loop over all cyclical shifts (length - 1 ones), shift to the right
     for (int i = 1; i < edgesSeen; i++) {
-        code = code >> CanonicalBorder(1) | (CanonicalBorder(code & CanonicalBorder(1)) << CanonicalBorder(edgesSeen - CanonicalBorder(1)));
+        code = (code >> CanonicalBorder(1)) | (CanonicalBorder(code & CanonicalBorder(1)) << CanonicalBorder(edgesSeen - CanonicalBorder(1)));
         if (code < smallestCode) {
             smallestCode = code;
             // Each loop, I go one position backwards (### de direction??)
@@ -1345,7 +1345,7 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
 
     // Loop over all cyclical shifts (length - 1 ones), shift to the right
     for (int i = 1; i < edgesSeen; i++) {
-        code = code >> CanonicalBorder(1) | ((code & CanonicalBorder(1)) << (edgesSeen - CanonicalBorder(1)));
+        code = (code >> CanonicalBorder(1)) | ((code & CanonicalBorder(1)) << (edgesSeen - CanonicalBorder(1)));
         if (code < smallestCode) {
             smallestCode = code;
             if (automorphisms) {
