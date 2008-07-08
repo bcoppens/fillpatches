@@ -48,7 +48,7 @@ inline int twosNeededForPentagon(int threes, int pentagons) {
 }
 
 struct ProcessBorderStack {
-    typedef enum { GrowthPair, IsomerisationPair, IsomerisationPatch, OutputAll, None } OutputType;
+    typedef enum { GrowthPair, IsomerisationPair, IsomerisationPatch, OutputAll, Count, None } OutputType;
 
     ProcessBorderStack(ostream& o, set<CanonicalBorder>& cBS, set<CanonicalForm>& gP, int l, int p, OutputType t)
         : out(o), canonicalBordersSeen(cBS), generatedPatches(gP), length(l), pentagons(p), outputType(t) {}
@@ -284,6 +284,18 @@ void processBorder(const char* string, ProcessBorderStack& stack)
 
     if (stack.outputType == ProcessBorderStack::None) { // Do nothing! :-)
         return;
+    } else if(stack.outputType == ProcessBorderStack::Count) {
+        vector<Patch> outputtable;
+
+        for (uint i = 0; i < l.size(); i++) {
+            // Isomorfism rejection
+            CanonicalForm f = computeCanonicalForm(l.at(i));
+            if (stack.generatedPatches.find(f) == stack.generatedPatches.end()) {
+                stack.generatedPatches.insert(f);
+                outputtable.push_back(l.at(i));
+            }
+        }
+        cerr << "Non-Isomorphic: " << outputtable.size() << endl;
     } else if(stack.outputType == ProcessBorderStack::OutputAll) {
         vector<Patch> outputtable;
 
@@ -399,6 +411,7 @@ void usage(const string& progname) {
     cout << "                 This REQUIRES you to set a pair selection method with -pairs <pairmethod>" << endl;
     cout << "      isopatches: will output all isomerisation patches" << endl;
     cout << "      patches_out: just output all patches found" << endl;
+    cout << "      count: fill all borders, throw away isomorphic ones, show the number of non-isomorphic ones" << endl;
     cout << "      none: fill all borders, but don't do anything with the result (handy in combination with -time)" << endl;
     cout << " -pairs <pairmethod> is to chose which kind of pairs will be outputted," << endl;
     cout << "    <pairmethod> is one of:" << endl;
@@ -460,6 +473,8 @@ int main(int argc, char** argv) {
                 type = ProcessBorderStack::OutputAll;
             } else if (mode == "isopatches") {
                 type = ProcessBorderStack::IsomerisationPatch;
+            } else if (mode == "count") {
+                type = ProcessBorderStack::Count;
             } else if (mode == "none") {
                 type = ProcessBorderStack::None;
             } else {
@@ -555,7 +570,8 @@ int main(int argc, char** argv) {
     else
         out_ = new ostream(&buffer);
     ostream& out = *out_;
-    out << ">>planar_code le<<";
+    if (type != ProcessBorderStack::Count && type != ProcessBorderStack::None)
+        out << ">>planar_code le<<";
 
     if (use_stdin || paramborder != "") {
         while ((!cin.eof() && cin.good())  || paramborder != "") {
