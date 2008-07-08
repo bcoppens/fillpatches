@@ -35,11 +35,12 @@ using namespace std;
 #define PRELOAD_MEGS 64
 #define PRELOAD_BYTES (1024*1024*PRELOAD_MEGS)
 
-off_t bitOffsetForBorderCode(CanonicalBorder borderCode, int borderLength) {
-    assert(borderCode);
-    assert(borderCode != CanonicalBorder(-1));
+off_t bitOffsetForBorderCode(CanonicalBorder borderCode_, int borderLength) {
+    assert(borderCode_ != CanonicalBorder(0));
+    assert(borderCode_ != CanonicalBorder(-1));
     //coutBitString(borderCode);
     //coutBitString(borderCode >> (borderLength - 2));
+    off_t borderCode = borderCode_;
     assert((borderCode >> (borderLength - 2)) == 0);
     assert(((borderCode >> (borderLength - 2)) & 3) == 0);
     assert(borderLength > 4);
@@ -64,7 +65,7 @@ void addBorderInfoToFile(CanonicalBorder borderCode, int borderLength, CanHaveFi
     if (hasFilling != CanHaveNo)
         return;
 
-    if (borderCode == 0) // Dit is een ZESHOEK! Negeer informatie
+    if (borderCode == CanonicalBorder(0)) // Dit is een ZESHOEK! Negeer informatie
         return;
 
     off_t bitOffset = bitOffsetForBorderCode(borderCode, borderLength);
@@ -83,7 +84,7 @@ void addBorderInfoToFile(CanonicalBorder borderCode, int borderLength, CanHaveFi
 }
 
 CanHaveFilling borderHasFillingFromFile(CanonicalBorder borderCode, int borderLength, char* fileMapping, const FdAndMap& fm) {
-    if (borderCode == 0) {
+    if (borderCode == CanonicalBorder(0)) {
         // Special case: border = 2^n. Only true if hexagon: n == 5 or n == 6
         if ((borderLength == 5) || (borderLength == 6))
             return CanHaveYes;
@@ -122,7 +123,7 @@ bool isInPreloaded(CanonicalBorder borderCode, int borderLength, const FdAndMap&
 
 
 CanHaveFilling borderHasFillingFromPreloaded(CanonicalBorder borderCode, int borderLength, const FdAndMap& fm) { // true -> has filling
-    if (borderCode == 0) {
+    if (borderCode == CanonicalBorder(0)) {
         // Special case: border = 2^n. Only true if hexagon: n == 5 or n == 6
         if ((borderLength == 5) || (borderLength == 6))
             return CanHaveYes;

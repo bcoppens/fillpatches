@@ -59,6 +59,8 @@ struct CanonicalForm {
 };
 
 typedef unsigned long CanonicalBorder;
+//#include "canonical_border_int.h"
+//typedef CanonicalBorderInt CanonicalBorder;
 
 bool operator<(const CanonicalForm& lhs, const CanonicalForm& rhs);
 bool operator==(const CanonicalForm& lhs, const CanonicalForm& rhs);

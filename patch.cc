@@ -279,7 +279,7 @@ pair<CanonicalBorder, int> codeForBorder(const VertexVector& list, Vertex startP
 
     // Loop over all cyclical shifts (length - 1 ones), shift to the right
     for (int i = 1; i < edgesSeen; i++) {
-        code = code >> CanonicalBorder(1) | (CanonicalBorder(code & CanonicalBorder(1)) << CanonicalBorder(edgesSeen - CanonicalBorder(1)));
+        code = code >> CanonicalBorder(1) | (CanonicalBorder(code & CanonicalBorder(1)) << CanonicalBorder(edgesSeen - 1));
         if (code < smallestCode) {
             smallestCode = code;
             // Each loop, I go one position backwards (### direction??)
@@ -305,7 +305,7 @@ pair<CanonicalBorder, int> codeForBorder(const VertexVector& list, Vertex startP
         begin_neighbour_iteration(prev, current, next, nb, list, nextIndex) {
             edgesSeen++;
             if (next == InVertex) {
-                code |= CanonicalBorder(1) << CanonicalBorder(edgesSeen - CanonicalBorder(1)); // 322 -> 001, so first 3 -> 0 shift
+                code |= CanonicalBorder(1) << CanonicalBorder(edgesSeen - 1); // 322 -> 001, so first 3 -> 0 shift
             }
         } end_neighbour_iteration(startPos, current, next, nb, nextIndex);
     } else {
@@ -316,7 +316,7 @@ pair<CanonicalBorder, int> codeForBorder(const VertexVector& list, Vertex startP
             edgesSeen++;
             // On an actual border, we look for the non-existance of OutVertex in the neighbours
             if (nb.nb[0] != OutVertex && nb.nb[1] != OutVertex && nb.nb[2] != OutVertex)
-                code |= CanonicalBorder(1) << CanonicalBorder(edgesSeen - CanonicalBorder(1));
+                code |= CanonicalBorder(1) << CanonicalBorder(edgesSeen - 1);
         }
     }
 
@@ -334,7 +334,7 @@ pair<CanonicalBorder, int> codeForBorder(const VertexVector& list, Vertex startP
 
     // Loop over all cyclical shifts (length - 1 ones), shift to the right
     for (int i = 1; i < edgesSeen; i++) {
-        code = code >> CanonicalBorder(1) | ((code & CanonicalBorder(1)) << (edgesSeen - CanonicalBorder(1)));
+        code = code >> CanonicalBorder(1) | ((code & CanonicalBorder(1)) << CanonicalBorder(edgesSeen - 1));
         if (code < smallestCode) {
             smallestCode = code;
             if (automorphisms) {
@@ -660,12 +660,12 @@ vector<Patch> tryAddNGonToBorder(AddMode mode, Patch& patch, Vertex startPos, Ve
 
                     // We'll fill one side, but first check if the pentagon condition on the other side is satisfied:
                     // Check the cache (### die condities hier en hierboven in 1 (of 2, met de add erachter) functie gooien??
-                    pair<CanonicalBorder, int> p2 = codeForBorder(list, v, current);
-                    int code = p2.first;
-                    int len = p2.second;
+                    //pair<CanonicalBorder, int> p2 = codeForBorder(list, v, current);
+                    BorderInformation p2 = analyzeBorder(list, v, current);
+                    int len = p2.length;
                     CanHaveFilling canHave = CanHaveMaybe;
-                    if (code != -1) {
-                        canHave = canBorderHaveFilling(code, len);
+                    if (p2.canBeQueried) {
+                        canHave = canBorderHaveFilling(p2.borderCode, len);
                         if (canHave == CanHaveNo) {
                             list.at(current).nb[nextIndex] = origPrev;
                             list.at(v).nb[prevIndex] = origNext;
@@ -693,9 +693,9 @@ vector<Patch> tryAddNGonToBorder(AddMode mode, Patch& patch, Vertex startPos, Ve
                             // Both sides got filled: OK!
                         } else {
                         }
-                        if (code > 0 && canHave == CanHaveMaybe) {
+                        if (p2.canBeQueried && canHave == CanHaveMaybe) {
                             canHave = (l3.size() == 0) ? CanHaveNo : CanHaveYes;
-                            addBorderCanHaveFilling(code, len, canHave);
+                            addBorderCanHaveFilling(p2.borderCode, len, canHave);
                         }
                         for (uint k = 0; k < l3.size(); k++) {
                             resultPatches.push_back(l3.at(k));
@@ -1287,7 +1287,7 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
 
     // Loop over all cyclical shifts (length - 1 ones), shift to the right
     for (int i = 1; i < edgesSeen; i++) {
-        code = (code >> CanonicalBorder(1)) | (CanonicalBorder(code & CanonicalBorder(1)) << CanonicalBorder(edgesSeen - CanonicalBorder(1)));
+        code = (code >> CanonicalBorder(1)) | (CanonicalBorder(code & CanonicalBorder(1)) << CanonicalBorder(edgesSeen - 1));
         if (code < smallestCode) {
             smallestCode = code;
             // Each loop, I go one position backwards (### de direction??)
@@ -1316,7 +1316,7 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
         begin_neighbour_iteration(prev, current, next, nb, list, nextIndex) {
             edgesSeen++;
             if (next == InVertex) {
-                code |= CanonicalBorder(1) << CanonicalBorder(edgesSeen - CanonicalBorder(1)); // 322 -> 001, so first 3 -> 0 shift
+                code |= CanonicalBorder(1) << CanonicalBorder(edgesSeen - 1); // 322 -> 001, so first 3 -> 0 shift
             }
         } end_neighbour_iteration(startPos, current, next, nb, nextIndex);
     } else {
@@ -1327,7 +1327,7 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
             edgesSeen++;
             // On an actual border, we look for the non-existance of OutVertex in the neighbours
             if (nb.nb[0] != OutVertex && nb.nb[1] != OutVertex && nb.nb[2] != OutVertex)
-                code |= CanonicalBorder(1) << CanonicalBorder(edgesSeen - CanonicalBorder(1));
+                code |= CanonicalBorder(1) << CanonicalBorder(edgesSeen - 1);
         }
     }
 
@@ -1345,7 +1345,7 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
 
     // Loop over all cyclical shifts (length - 1 ones), shift to the right
     for (int i = 1; i < edgesSeen; i++) {
-        code = (code >> CanonicalBorder(1)) | ((code & CanonicalBorder(1)) << (edgesSeen - CanonicalBorder(1)));
+        code = (code >> CanonicalBorder(1)) | ((code & CanonicalBorder(1)) << CanonicalBorder(edgesSeen - 1));
         if (code < smallestCode) {
             smallestCode = code;
             if (automorphisms) {
@@ -1373,7 +1373,7 @@ void assertAnalyzedInformationOK(const BorderInformation& info, const VertexVect
     assert(foundStartPos.second == info.direction);
     */
 
-    if (info.borderCode != 0) { // Regular n-gon
+    if (info.borderCode != CanonicalBorder(0)) { // Regular n-gon
         Neighbours nb;
         nb = list.at(info.startPos);
         assert ( (nb.nb[0] == InVertex) || (nb.nb[1] == InVertex) || (nb.nb[2] == InVertex));

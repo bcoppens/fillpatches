@@ -203,7 +203,7 @@ bool borderEncodingIsEmbeddableInFullerene(CanonicalBorder b, int length) {
     if (length < 5)
         return true; // 'Safe' assumption
     for (int i = 0; i <= length - 5; i++) {
-        if ((b & (mask << i)) == (mask << i))
+        if ((b & CanonicalBorder(mask << i)) == CanonicalBorder(mask << i))
             return false;
     }
     return true;
