@@ -903,7 +903,8 @@ CanonicalForm computeCanonicalForm(const Patch& patch, bool d, vector<PatchAutoI
 #else
     vector<BorderAutoInfo> borderAuts;
     // ### onActualBorder is TRUE! Ongetest!
-    codeForBorder(patch.list, 0, 1, patch.borderLength, &borderAuts);
+    //codeForBorder(patch.list, 0, 1, patch.borderLength, &borderAuts);
+    analyzeBorder(patch.list, 0, 1, patch.borderLength, &borderAuts); // ignore result, this is just for the auts
     for (vector<BorderAutoInfo>::const_iterator it = borderAuts.begin(); it != borderAuts.end(); ++it ) {
         int i = (*it).start;
         Neighbours nb = list.at(i);
@@ -1280,7 +1281,7 @@ int off = 0;
     result.startPos = offsetToVertex[0]; // 0
     result.direction = offsetToVertex[1]; // 1
 
-    assert(edgesSeen < 65); // Or we'd have overflown PLATFORMONAFHANKELIJK FIXME
+    assert(edgesSeen < 8*sizeof(CanonicalBorder)); // Or we'd have overflown PLATFORMONAFHANKELIJK FIXME
 
     smallestCode = code;
     //assert(smallestCode != 0);
