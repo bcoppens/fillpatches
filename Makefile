@@ -2,7 +2,7 @@ HEADERS=patch.h file.h canonical_border_int.h
 FILES=main3.cc patch.cc file.cc
 OBJECTS=patch.o growthpairs.o file.o
 
-GXXOPTS=-O0 -g -Wall
+GXXOPTS=-O3 -g -Wall
 
 all: main3 canonicalizeplanargraph canonicalizeplanargraph-nole
 

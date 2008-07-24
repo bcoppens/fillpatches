@@ -358,9 +358,9 @@ pair<CanonicalBorder, int> codeForBorder(const VertexVector& list, Vertex startP
 }
 
 //#define USE_CROSSPROCESS_FILE
-//#define USE_INTERNAL_TREE
-//#define LIMIT_TREE
-#define INTERNAL_TREE_LIMIT 20
+#define USE_INTERNAL_TREE
+#define LIMIT_TREE
+#define INTERNAL_TREE_LIMIT 25
 //#define TRY_PRELOADED_FIRST
 
 CanHaveFilling canBorderHaveFilling(CanonicalBorder borderCode, int borderLength) {
@@ -1203,6 +1203,8 @@ void printBorderFillingInfo() {
 // TODO Aparte code indien we de rand van een INGEVULDE patch willen bepalen (geen InVertex meer!) (?)
 // Ingevulde rand zal alleen werken als de patch de volledige patch is! Dat is, als de eerste borderLength toppen van de list de rand bepalen, en alleen die!
 
+static Vertex offsetToVertex[8*sizeof(CanonicalBorder)];
+
 // !!! Automorphisms only makes sense when the border is the border of the PATCH!
 BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Vertex direction, int onActualBorderLength, std::vector<BorderAutoInfo>* automorphisms) {
     // TODO lookup tabel voor de te &'en stuff ofzo
@@ -1225,11 +1227,11 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
     result.startPos = 0;
     result.direction = 0;
 
-    vector<Vertex> offsetToVertex;
+    //vector<Vertex> offsetToVertex;
 
     // FIXME we moeten bij die automorfismen letten op startPos _EN_ direction!
     int edgesSeen = 0;
-
+int off = 0;
     // Initialize
     if (onActualBorderLength == 0) {
         begin_neighbour_iteration(prev, current, next, nb, list, nextIndex) {
@@ -1243,7 +1245,8 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
             }
             /* Take note here: we need to take a step 'backwards'. Example: imagine the initial try is the shortest one. Hence, code will start with '0',
                which will be the startPos as well. This is wrong, we need the prev*/
-            offsetToVertex.push_back(prev); // Op positie i is te vinden: de ide vertex die we tegen kwamen.
+            //offsetToVertex.push_back(prev); // Op positie i is te vinden: de ide vertex die we tegen kwamen.
+            offsetToVertex[off++] = prev;
         } end_neighbour_iteration(startPos, current, next, nb, nextIndex);
     } else {
         assert(onActualBorderLength > 0);
@@ -1260,7 +1263,8 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
             } else {
                 result.twos++;
             }
-            offsetToVertex.push_back((startPos + i) % onActualBorderLength); // Op positie i is te vinden: de ide vertex die we tegen kwamen. ### (Same as above)
+            //offsetToVertex.push_back((startPos + i) % onActualBorderLength); // Op positie i is te vinden: de ide vertex die we tegen kwamen. ### (Same as above)
+            offsetToVertex[off++] = (startPos + i) % onActualBorderLength;
         }
     }
 
@@ -1269,10 +1273,12 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
     if ((edgesSeen < BorderFillingMinLen) || (edgesSeen > BorderFillingMaxLen))
         result.canBeQueried = false;
 
-    assert(static_cast<uint>(result.length) == offsetToVertex.size());
+    assert(static_cast<uint>(result.length) == off);//offsetToVertex.size());
 
-    result.startPos = offsetToVertex.at(0); // 0
-    result.direction = offsetToVertex.at(1); // 1
+    //result.startPos = offsetToVertex.at(0); // 0
+    //result.direction = offsetToVertex.at(1); // 1
+    result.startPos = offsetToVertex[0]; // 0
+    result.direction = offsetToVertex[1]; // 1
 
     assert(edgesSeen < 65); // Or we'd have overflown PLATFORMONAFHANKELIJK FIXME
 
@@ -1296,8 +1302,8 @@ BorderInformation analyzeBorder(const VertexVector& list, Vertex startPos, Verte
                 automorphisms->push_back(BorderAutoInfo((startPos + i * (edgesSeen - 1) + 1) % (edgesSeen), (startPos + i * (edgesSeen - 1) + 2) % (edgesSeen), 0));
             }
 
-            result.startPos = offsetToVertex.at((result.length - i) % result.length); // i
-            result.direction = offsetToVertex.at((result.length - i + 1) % result.length); // (i + 1) % result.length
+            result.startPos = offsetToVertex[((result.length - i) % result.length)]; // i
+            result.direction = offsetToVertex[((result.length - i + 1) % result.length)]; // (i + 1) % result.length
         } else if (code == smallestCode) {
             if (automorphisms) {
                 automorphisms->push_back(BorderAutoInfo((startPos + i * (edgesSeen - 1) + 1) % (edgesSeen), (startPos + i * (edgesSeen - 1) + 2) % (edgesSeen), 0));

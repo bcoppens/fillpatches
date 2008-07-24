@@ -8,7 +8,7 @@
 #endif
 
 #ifndef CanonicalSize
-#define CanonicalSize 4
+#define CanonicalSize 2
 #endif
 
 #define BaseBitSize (8*sizeof(CanonicalBaseType))
@@ -41,14 +41,14 @@ struct CanonicalBorderInt {
     }
 
     CanonicalBorderInt operator|(const CanonicalBorderInt& rhs) const {
-        CanonicalBorderInt c;
+        CanonicalBorderInt c(NoInit);
         for (int i = 0; i < CanonicalSize; i++)
             c.content[i] = content[i] | rhs.content[i];
         return c;
     }
 
     CanonicalBorderInt operator&(const CanonicalBorderInt& rhs) const {
-        CanonicalBorderInt c;
+        CanonicalBorderInt c(NoInit);
         for (int i = 0; i < CanonicalSize; i++)
             c.content[i] = content[i] & rhs.content[i];
         return c;
@@ -57,6 +57,8 @@ struct CanonicalBorderInt {
     CanonicalBorderInt operator<<(const CanonicalBorderInt& rhs) const {
         // ### rhs is actually a BaseType!!!!!
         CanonicalBorderInt c;
+        //for (int i = 0; i < CanonicalSize - 2; i++)
+        //    assert(rhs.content[i] == 0);
         CanonicalBaseType shift = rhs.content[CanonicalSize - 1];
         if (shift % BaseBitSize == 0) {
             // Whole shift:
@@ -84,6 +86,8 @@ struct CanonicalBorderInt {
     CanonicalBorderInt operator>>(const CanonicalBorderInt& rhs) const {
         // ### rhs is actually a BaseType!!!!!
         CanonicalBorderInt c;
+        //for (int i = 0; i < CanonicalSize - 2; i++)
+        //    assert(rhs.content[i] == 0);
         CanonicalBaseType shift = rhs.content[CanonicalSize - 1];
         if (shift % BaseBitSize == 0) {
             // Whole shift:
@@ -139,9 +143,11 @@ struct CanonicalBorderInt {
         // Call only if offset fits in basetype!
         assert(sizeof(off_t) <= sizeof(CanonicalBaseType));
         // Only if this can be converted...
-        // ### Check
+        //for (int i = 0; i < CanonicalSize - 2; i++)
+        //    assert(content[i] == 0);
         return content[CanonicalSize - 1];
     }
+    private: typedef enum { NoInit } Init; CanonicalBorderInt(Init) {}
 };
 
 
