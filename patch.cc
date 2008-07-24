@@ -599,7 +599,7 @@ vector<Patch> tryAddNGonToBorder(AddMode mode, Patch& patch, Vertex startPos, Ve
 #if 1
             } // ### Die indentatie klopt hier niet meer, en die #ifs zijn vast fout met die accolades tegenwoordig..
 
-        if (ngonEdges <= 3) { // If we already saw 4 edges, don't even try!!
+        if (ngonEdges <= 4) { // If we already saw 4 edges, don't even try!!
                 // Possibility 2: make a connection to all other vertices in the current 'hole'
                 // .first = vertex, .second = next
                 vector< pair<Vertex, Vertex> > possibleTargets;
