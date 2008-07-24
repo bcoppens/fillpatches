@@ -58,9 +58,9 @@ struct CanonicalForm {
     void clone(const CanonicalForm& rhs, bool dirty);
 };
 
-typedef unsigned long CanonicalBorder;
-//#include "canonical_border_int.h"
-//typedef CanonicalBorderInt CanonicalBorder;
+//typedef unsigned long CanonicalBorder;
+#include "canonical_border_int.h"
+typedef CanonicalBorderInt CanonicalBorder;
 
 bool operator<(const CanonicalForm& lhs, const CanonicalForm& rhs);
 bool operator==(const CanonicalForm& lhs, const CanonicalForm& rhs);

@@ -96,7 +96,7 @@ struct CanonicalBorderInt {
             CanonicalBaseType sright = shift % BaseBitSize;
             CanonicalBaseType sleft = BaseBitSize - sright;
             int idx, i;
-            for (i = CanonicalSize - 1; i >= 0 && (signed(i - (shift / BaseBitSize)) >= 0); i--) {
+            for (i = CanonicalSize - 1; (i >= 0) && (signed(i - (shift / BaseBitSize)) >= 0); i--) {
                 idx = i - (shift / BaseBitSize);
                 if (idx - 1 >= 0)
                     c.content[i] = (content[idx] >> sright) | (content[idx-1] << sleft);
@@ -116,16 +116,16 @@ struct CanonicalBorderInt {
     }
 
     bool operator!=(const CanonicalBorderInt& rhs) const {
-        for (int i = 0; i < CanonicalSize; i++)
-            if (content[i] == rhs.content[i])
-                return false;
-        return true;
+        return !(*this == rhs);
     }
 
     bool operator<(const CanonicalBorderInt& rhs) const {
-        for (int i = 0; i < CanonicalSize; i++)
+        for (int i = 0; i < CanonicalSize; i++) {
             if (content[i] < rhs.content[i])
                 return true;
+            else if (content[i] > rhs.content[i])
+                return false;
+        }
         return false;
     }
 
