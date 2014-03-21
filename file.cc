@@ -17,6 +17,7 @@
 */
 
 #include <iostream>
+#include <cassert>
 
 #include <sys/types.h>
 #include <sys/mman.h>

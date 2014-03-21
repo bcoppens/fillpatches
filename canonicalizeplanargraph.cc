@@ -24,6 +24,7 @@
 #include <list>
 #include <vector>
 #include <ctime>
+#include <cassert>
 
 #include "patch.h"
 #include "file.h"
