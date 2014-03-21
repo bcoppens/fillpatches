@@ -1,0 +1,16 @@
+Usage:
+* make
+* ./main3 to see the possible commandline options to generate fillings of borders of patches
+* ./canonicalizeplanargraph outputs some kind of canonical form, given a file containing patches
+Test programs:
+* ./captest.sh
+  Compares output of the main3 program with the 'tubetype' program for fillings of the borders (01)^k
+  For this to work, add the 'tubetype' executable to the directory 'caps' (or edit the paths in the script)
+  Its parameters can be configured in the form of a range of 'k' that will be tested
+* ./easycompare.sh
+  Compares output of the main3 program with the 'boundary' program for fillings of all borders within a range of borderlengths and number of pentagons
+  For this to work, add the 'boundary' and 'hydrocarbon' executables to the 'boundary' directory (or edit the paths in the script)
+  The parameters for the range of lengths and pentagons can be configured by editing the file, just like the output that will be tested (growth pairs, isomerisation patches/pairs)
+Note on the test programs:
+  The test scripts can claim the outputs are OK in case the canonicalize program is buggy
+
